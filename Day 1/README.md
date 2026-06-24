@@ -44,6 +44,11 @@ This folder contains the work completed for Day 1 of the internship. The objecti
 ### 4. Region Reduction
 - Computed the average (mean) NDVI and NDBI value for each of the 29 districts using Earth Engine's `.reduceRegions()` reducer with a scale of 10 meters for Sentinel-2 and 30 meters for Landsat 8.
 
+### 5. Interactive Visualization
+- Utilized the `geemap` library to render an interactive map interface within the notebook.
+- Overlaid the calculated Sentinel-2 and Landsat 8 NDVI and NDBI median composites using specific color palettes (e.g., green-white-red for NDBI).
+- Displayed the administrative district boundaries of Hanoi as an outline for spatial context.
+
 ---
 
 ## Analysis & Key Findings

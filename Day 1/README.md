@@ -66,9 +66,7 @@ This folder contains the work completed for Day 1 of the internship. The objecti
 
 ### 5. Interactive Visualization
 - Utilized the `geemap` library to render an interactive map interface within the notebook.
-- Overlaid the Sentinel-2 and Landsat 8 NDVI and NDBI median composites using distinct color palettes:
-  - NDVI: `blue → white → green`
-  - NDBI: `green → white → red`
+
 - Displayed the administrative district boundaries of Hanoi as a red outline for spatial context.
 
 ---

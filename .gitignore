@@ -1,0 +1,23 @@
+# Ignore heavy satellite imagery datasets (exceeds GitHub's 100MB file size limit)
+Day 1/LC09_L2SP_*
+Day 1/sentinel Hanoi 2024/
+Day 1/sentinel_Hanoi-*
+*.tar
+*.zip
+
+# Ignore local python virtual environments and cache
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+
+# Ignore all image and media files by default
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.tif
+*.tiff
+
+# Exceptions: Explicitly allow media in these specific folders
+!/Day 1/media/**
+!/Day 1/QGISmedia/**

@@ -1,0 +1,43 @@
+KẾ HOẠCH CHI TIẾT Ngày 1
+
+
+Khu vực mục tiêu: Thành phố Hà Nội
+Dữ liệu đầu vào: File Shapefile xã phường HN, Ảnh vệ tinh Sentinel-2 HN.
+
+PHẦN 1: THIẾT LẬP MÔI TRƯỜNG (ENVIRONMENT SETUP)
+1.1. Cài đặt QGIS: Tải và cài đặt QGIS bản LTR (Long Term Release). Đây là công cụ để kiểm tra trực quan nhanh (GIS Viewer).
+1.2. Cài đặt Miniconda:
+Tạo môi trường ảo tên hanoi_gis bằng lệnh: conda create -n hanoi_gis python=3.9.
+Cài đặt các thư viện lõi qua terminal: geopandas, rasterio, matplotlib, folium, fiona.
+1.3. Công cụ lập trình: Cài đặt và sử dụng Jupyter Notebook hoặc VS Code để viết script xử lý.
+PHẦN 2: TỰ KHAI THÁC DỮ LIỆU (DATA ACQUISITION)
+2.1. Đăng ký tài khoản: Truy cập và đăng ký tài khoản tại NASA Earthdata và USGS EarthExplorer.
+2.2. Tải ảnh Landsat 8:
+Tìm và tải 01 cảnh ảnh Landsat 8 (Level 2) bao phủ khu vực Hà Nội (Path/Row: 127/045).
+Tiêu chí: Độ phủ mây < 10%, chọn ảnh mới nhất hoặc ảnh sạch mây nhất trong 1 năm qua.
+Mục tiêu: Làm quen với quy trình lấy dữ liệu vệ tinh chuẩn quốc tế.
+PHẦN 3: ĐỌC HIỂU CẤU TRÚC DỮ LIỆU & METADATA
+Yêu cầu thực tập sinh sử dụng cả QGIS và Code Python để phân tích các thông số sau:
+3.1. Dữ liệu Vector (Shapefile Xã/Phường Hà Nội):
+Kiểm tra Hệ tọa độ (CRS): Là VN-2000 hay WGS84?
+Kiểm tra bảng thuộc tính (Attribute Table): Các trường thông tin (tên xã, huyện, diện tích), định dạng mã hóa tiếng Việt (Encoding).
+3.2. Dữ liệu Raster (Sentinel-2 và Landsat 8):
+Đọc Metadata: Xem độ phân giải (10m vs 30m), kiểu dữ liệu (Uint16), số lượng kênh phổ (Bands).
+Phân tích file .MTL (với Landsat): Tìm góc mặt trời, thời gian chụp, hệ số chuyển đổi giá trị pixel. (đối với ảnh Landsat tự tải về)
+PHẦN 4: HIỂN THỊ DỮ LIỆU (VISUALIZATION)
+Yêu cầu thực hiện song song trên phần mềm và bằng code:
+4.1. Trên phần mềm QGIS:
+Chồng lớp (Overlay) Shapefile xã phường lên ảnh Sentinel-2 và Landsat 8.
+Styling: Tô màu xã phường theo từng Quận (Categorized); Hiển thị Label tên xã/phường.
+Filter: lọc chỉ lấy phường hoặc chỉ lấy xã . 
+Band Composite: Hiển thị ảnh vệ tinh dưới dạng màu thật (True Color) và màu giả (False Color - để nổi bật thực vật).
+4.2. Bằng Code Python:
+Viết Script sử dụng geopandas và rasterio để vẽ bản đồ ranh giới các xã Hà Nội đè lên ảnh vệ tinh.
+Xử lý lỗi lệch hệ tọa độ (nếu có) để hai lớp dữ liệu khớp khít hoàn toàn tại khu vực Hà Nội.
+Interactive Map: Sử dụng thư viện folium để tạo 1 file HTML bản đồ tương tác đơn giản cho phép click xem tên từng xã trên nền ảnh vệ tinh.
+PHẦN 5: SẢN PHẨM DỰ KIẾN
+Ảnh chụp màn hình QGIS: Bản đồ xã phường Hà Nội đã phân màu theo Quận, hiển thị rõ tên xã trên nền ảnh Sentinel-2.
+File báo cáo công việc: Tóm tắt đã tìm hiểu được gì, chưa làm được gì. 
+File Notebook (.ipynb): Toàn bộ code Python đã thực hiện các nhiệm vụ đọc, xử lý và hiển thị dữ liệu nêu trên.
+Dữ liệu: Gói dữ liệu Landsat 8 đã tải về từ USGS.
+Note: Phần nào không biết ghi lại để chị hướng dẫn nhé !!!

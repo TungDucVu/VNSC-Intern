@@ -1,4 +1,0 @@
-Nhiệm vụ:
-Xử lý Vector: Tìm và nạp file Vector ranh giới hành chính Hà Nội (đến cấp Quận/Huyện) vào GEE/Colab.
-Xử lý Raster: Sử dụng GEE API để truy vấn kho ảnh Sentinel-2 và Landsat 8 bao phủ Hà Nội trong năm 2023-2024.
-Lập trình: Viết hàm tự động cắt ảnh (Clip) theo ranh giới Hà Nội, lọc mây và tính toán chỉ số NDVI (Cây xanh), NDBI (Đô thị) cho từng Quận.

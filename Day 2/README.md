@@ -8,7 +8,7 @@ Thư mục này chứa toàn bộ mã nguồn, dữ liệu đầu ra và kết q
 * **Thiết lập mẫu huấn luyện dạng vùng (Polygons)**: Số hóa 15 vùng mẫu đại diện trên bản đồ cho 4 lớp chính: Đô thị (Urban), Nước (Water), Nông nghiệp (Agriculture), và Cây xanh (Greenery), thu thập tổng cộng 600 điểm ảnh mẫu (150 mẫu/lớp) thông qua phương pháp lấy mẫu phân tầng (Stratified Sampling).
 * **Tích hợp chỉ số viễn thám**: Đưa thêm các chỉ số phổ phụ trợ **NDVI**, **NDBI**, và **MNDWI** làm biến đầu vào (Features) để tăng độ phân biệt giữa các lớp phủ.
 * **Huấn luyện mô hình Random Forest**: Sử dụng bộ phân loại `ee.Classifier.smileRandomForest` cấu hình **100 cây quyết định** chạy trực tiếp trên GEE.
-* **Thống kê diện tích**: Raster-to-Vector zonal statistics để tính toán diện tích ($km^2$) từng lớp phủ của 29 Quận/Huyện của Hà Nội, so sánh sự phát triển đô thị (ví dụ: Cầu Giấy vs. Hà Đông).
+* **Thống kê diện tích**: Raster-to-Vector zonal statistics để tính toán diện tích ($km^2$) từng lớp phủ của 29 Quận/Huyện của Hà Nội.
 * **Trực quan hóa**: Xuất bản đồ tương tác HTML hiển thị ranh giới hành chính kèm thông số đô thị hóa khi di chuột qua từng quận.
 
 ---

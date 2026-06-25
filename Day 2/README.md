@@ -18,7 +18,7 @@ Thư mục này chứa toàn bộ mã nguồn, dữ liệu đầu ra và kết q
 * 📄 [hanoi_lulc_district_areas.csv](hanoi_lulc_district_areas.csv): Bảng dữ liệu diện tích các lớp phủ bề mặt ($km^2$) của từng Quận/Huyện.
 * 📄 [hanoi_lulc_interactive.html](hanoi_lulc_interactive.html): Bản đồ tương tác LULC Hà Nội tích hợp chú giải (Legend), ranh giới quận huyện và tooltip thông tin đô thị hóa thông minh.
 * 📄 [implementation_plan.md](implementation_plan.md): Kế hoạch thực hiện chi tiết.
-* 📄 [Hanoi_lulc.png](Hanoi_lulc.png): Bản đồ LULC Hà Nội 2024.
+* 📄 [static_output.png](static_output.png): Bản đồ LULC Hà Nội 2024.
 
 
 ---

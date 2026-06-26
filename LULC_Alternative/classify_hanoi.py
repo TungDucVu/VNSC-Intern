@@ -51,7 +51,28 @@ def get_s2_composite(year, boundary):
     ndbi = base_image.normalizedDifference(['B11', 'B8']).rename('NDBI')
     mndwi = base_image.normalizedDifference(['B3', 'B11']).rename('MNDWI')
     
-    return base_image.addBands([ndvi, ndbi, mndwi])
+    # Standard deviation of NDVI for the full year
+    full_year_col = (ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+                     .filterBounds(boundary)
+                     .filterDate(f"{year}-01-01", f"{year}-12-31")
+                     .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20)))
+    
+    def calculate_ndvi(img):
+        qa = img.select('QA60')
+        cloudBitMask = 1 << 10
+        cirrusBitMask = 1 << 11
+        mask = qa.bitwiseAnd(cloudBitMask).eq(0).And(qa.bitwiseAnd(cirrusBitMask).eq(0))
+        masked = img.updateMask(mask).resample('bicubic')
+        return masked.normalizedDifference(['B8', 'B4']).rename('NDVI')
+        
+    ndvi_stddev = full_year_col.map(calculate_ndvi).reduce(ee.Reducer.stdDev()).rename('NDVI_stdDev').clip(boundary)
+    
+    # GLCM Contrast on composite B8 band scaled to 8-bit
+    b8_scaled = base_image.select('B8').divide(40).toInt()
+    glcm = b8_scaled.glcmTexture(size=1)
+    b8_contrast = glcm.select('B8_contrast')
+    
+    return base_image.addBands([ndvi, ndbi, mndwi, ndvi_stddev, b8_contrast])
 
 print("Querying and compositing Sentinel-2 imagery...")
 # Load DEM and calculate slope
@@ -101,7 +122,7 @@ train_set = samples_with_random.filter(ee.Filter.lt('random', 0.7))
 test_set = samples_with_random.filter(ee.Filter.gte('random', 0.7))
 
 # 5. Train Random Forest (150 trees)
-features = ['B2', 'B3', 'B4', 'B8', 'B11', 'B12', 'NDVI', 'NDBI', 'MNDWI', 'elevation', 'slope']
+features = ['B2', 'B3', 'B4', 'B8', 'B11', 'B12', 'NDVI', 'NDBI', 'MNDWI', 'elevation', 'slope', 'NDVI_stdDev', 'B8_contrast']
 print("Huấn luyện Random Forest 150 cây...")
 classifier = ee.Classifier.smileRandomForest(150).train(
     features=train_set,

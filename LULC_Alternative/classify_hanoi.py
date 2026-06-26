@@ -100,6 +100,8 @@ samples_2021 = image_with_class_2021.stratifiedSample(
     region=hanoi_fc.geometry(),
     scale=10,
     seed=42,
+    classValues=[0, 1, 2, 3, 4],
+    classPoints=[1000, 800, 800, 800, 1200],
     geometries=True
 )
 

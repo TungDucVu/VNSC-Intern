@@ -1,48 +1,11 @@
-Phương án B tập trung vào tư duy **"Dữ liệu quyết định độ chính xác" (Data-driven approach)**. Khi thuật toán Random Forest đã đạt trần tối ưu về cấu hình (150 cây, split = 3), việc nhồi thêm tham số không có tác dụng. Cái mô hình cần lúc này là những **đặc trưng (features)** sắc bén hơn để phân tách các pixel bị nhập nhằng.
+, bạn thay đổi tham số numPoints (hoặc cấu hình số lượng mẫu theo từng class). Thay vì lấy đều 800 điểm cho mọi lớp, bạn nâng cấp cấu hình như sau:
 
-Dưới đây là chi tiết cách hoạt động và cách triển khai 2 vũ khí hạng nặng của Phương án B trên GEE:
+Lớp 0 (Nước): 1000 điểm
 
----
+Lớp 1 (Đô thị): 800 điểm
 
-### 1. Đặc trưng Biến động Thời gian (Temporal Variability Feature)
+Lớp 2 (Nông nghiệp): 800 điểm
 
-* **Mục tiêu cứu vớt:** Giảm tối đa sự nhầm lẫn giữa **Nông nghiệp (2) ↔ Đất trống (4)** và **Nông nghiệp (2) ↔ Đô thị (1)**.
-* **Bản chất khoa học:** Một pixel là bãi cát sông Hồng hay mái nhà bê tông thì suốt 365 ngày trong năm, giá trị NDVI của nó hầu như không thay đổi (luôn thấp và đi ngang). Ngược lại, một pixel ruộng ngô bãi bồi hay ruộng lúa ngoại thành sẽ có chu kỳ: *Đất trống (sau gặt) ↔ Cây xanh tốt (đỉnh vụ) ↔ Đất trống*.
-* Nếu ta chỉ lấy ảnh trung bình mùa khô (tháng 1 - tháng 3), ruộng đang trơ đất sẽ có phổ giống hệt bãi cát. Nhưng nếu ta nạp cho mô hình **Độ lệch chuẩn thời gian (Standard Deviation - stdDev)** của NDVI cả năm, mô hình sẽ nhận ra ngay:
-* $NDVI_{stdDev} \approx 0$: Đất trống xịn hoặc Đô thị.
-* $NDVI_{stdDev} > 0.15$: Đất nông nghiệp (có chu kỳ sinh trưởng).
+Lớp 3 (Cây xanh): 800 điểm
 
-
-
-
-
-
-
----
-
-### 2. Đặc trưng Kết cấu Không gian (Texture Feature - GLCM)
-
-* **Mục tiêu cứu vớt:** Giảm tối đa sự nhầm lẫn giữa **Đô thị (1) ↔ Đất trống/Cãi cát (4)**.
-* **Bản chất khoa học:** Xét về phổ quang học, cát khô và bê tông/mái tôn dội năng lượng về vệ tinh mạnh như nhau. Nhưng về cấu trúc bề mặt (Texture), bãi cát sông Hồng rất mịn và đồng nhất, trong khi khu đô thị là một tổ hợp hỗn loạn, nhấp nhô và đứt gãy của nhà cửa, đường xá, bóng râm.
-* Thuật toán **GLCM (Gray-Level Co-occurrence Matrix)** sẽ quét một ô cửa sổ (ví dụ $3\times3$ hoặc $5\times5$ pixel) để đo độ tương phản (Contrast) hoặc độ hỗn loạn (Entropy).
-* Vùng bãi cát: Độ tương phản giữa các pixel cạnh nhau cực thấp.
-* Vùng đô thị: Độ tương phản cực cao.
-
-
-
-
-
-```
-
----
-
-### 📈 Kết quả kỳ vọng sau khi nâng cấp lên Phương án B:
-
-Khi bạn cập nhật lại danh sách thuộc tính mới:
-
-```python
-features = ['B2', 'B3', 'B4', 'B8', 'B11', 'B12', 'NDVI', 'NDBI', 'MNDWI', 'elevation', 'slope', 'NDVI_stdDev', 'B8_contrast']
-
-```
-
-Mô hình Random Forest sẽ có thêm 2 "lăng kính" cực mạnh để phân rã các pixel lỳ lợm. Độ chính xác toàn cục (OA) thường sẽ **tăng thêm từ 5% - 8%**, đẩy bài làm của bạn chạm ngưỡng **>80%** — một con số cực kỳ đẹp và thuyết phục đối với hội đồng khoa học cấp học thuật.
+Lớp 4 (Đất trống): 1200 điểm

@@ -74,7 +74,6 @@ Cây xanh (3)    |     5    |    18      |      34        |    186       |      
 
 ## 3. Các sản phẩm đầu ra trong thư mục
 * 📄 **[classify_hanoi.ipynb](classify_hanoi.ipynb)**: Jupyter Notebook chi tiết, lưu vết đầy đủ đầu ra thực thi của mô hình.
-* 📄 **[classify_hanoi.py](classify_hanoi.py)**: Tập lệnh Python tương ứng thực thi toàn bộ quy trình GEE.
 * 📄 **[hanoi_lulc_district_areas.csv](hanoi_lulc_district_areas.csv)**: Bảng thống kê diện tích ($km^2$) các lớp phủ LULC cho 29 quận/huyện của Hà Nội được tính ở độ phân giải 10m.
 * 📄 **[hanoi_lulc_interactive.html](hanoi_lulc_interactive.html)**: Bản đồ tương tác Folium chứa ranh giới quận huyện, chú thích 5 lớp phủ, và tooltip thông minh hiển thị tỷ lệ đô thị hóa khi di chuột.
 
@@ -82,9 +81,9 @@ Cây xanh (3)    |     5    |    18      |      34        |    186       |      
 
 ## 4. Hướng dẫn chạy chương trình
 
-Đảm bảo môi trường conda `hanoi_gis` đã được kích hoạt, sau đó chạy lệnh:
+Đảm bảo môi trường conda `hanoi_gis` đã được kích hoạt, mở và chạy toàn bộ các cell trong Jupyter Notebook:
 
 ```bash
-# Chạy script Python
-python LULC_Alternative/classify_hanoi.py
+# Mở Jupyter Notebook
+jupyter notebook LULC_Hanoi_2921_2024/classify_hanoi.ipynb
 ```

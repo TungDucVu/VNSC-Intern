@@ -1,12 +1,12 @@
-# Quy trình Phân loại Lớp phủ LULC Hà Nội Cấp học thuật (Kế hoạch Thay thế)
+# Quy trình Phân loại Lớp phủ LULC Hà Nội Cấp học thuật (2021 - 2024)
 
-Thư mục này chứa mã nguồn triển khai quy trình phân loại lớp phủ bề mặt (Land Use / Land Cover - LULC) cấp học thuật cho thành phố Hà Nội. Quy trình này chuyển đổi phương pháp từ lấy mẫu đa giác thủ công sang lấy mẫu phân tầng tự động dựa trên bộ dữ liệu **ESA WorldCover 2021**, tích hợp các đặc trưng địa hình (Độ cao, Độ dốc) từ dữ liệu **ALOS AW3D30 DEM**, và huấn luyện mô hình Random Forest kết hợp với các bộ lọc hậu xử lý giảm nhiễu.
+Thư mục này chứa mã nguồn triển khai quy trình phân loại lớp phủ bề mặt (Land Use / Land Cover - LULC) cấp học thuật cho thành phố Hà Nội. Quy trình này chuyển đổi phương pháp từ lấy mẫu đa giác thủ công sang lấy mẫu phân tầng tự động dựa trên bộ dữ liệu **ESA WorldCover 2021**, tích hợp các đặc trưng địa hình (Độ cao, Độ dốc) từ dữ liệu **ALOS AW3D30 DEM**, và huấn luyện mô hình **Random Forest (200 cây)** trên **Google Earth Engine (GEE)** kết hợp với các bộ lọc hậu xử lý giảm nhiễu.
 
 ---
 
 ## 1. Phương pháp Phân loại
 
-Quy trình phân loại thay thế bao gồm 5 giai đoạn chính:
+Quy trình phân loại bao gồm 5 giai đoạn chính:
 
 ### Giai đoạn 1: Thu thập & Tiền xử lý dữ liệu
 * **Ảnh vệ tinh**: Ảnh độ phản xạ bề mặt Sentinel-2 (Level-2A) được tổng hợp (composite) cho mùa khô (từ 01/01 đến 15/02) của năm 2021 (năm cơ sở để lấy mẫu) và năm 2024 (năm mục tiêu phân loại).
@@ -16,15 +16,15 @@ Quy trình phân loại thay thế bao gồm 5 giai đoạn chính:
 
 ### Giai đoạn 2: Lựa chọn Thuộc tính (Feature Engineering)
 Tổng cộng **16 thuộc tính dự báo** được đưa vào bộ phân loại:
-* **Các kênh phổ**: Xanh dương (`B2`), Xanh lá (`B3`), Đỏ (`B4`), Cận hồng ngoại (`B8`), SWIR-1 (`B11`), và SWIR-2 (`B12`).
+* **Các kênh phổ**: Xanh dung (`B2`), Xanh lá (`B3`), Đỏ (`B4`), Cận hồng ngoại (`B8`), SWIR-1 (`B11`), và SWIR-2 (`B12`).
 * **Các chỉ số phổ phụ trợ**:
-  * NDVI (Chỉ số thực vật): để nhận diện cây xanh.
-  * NDBI (Chỉ số đất xây dựng): để nhận diện bề mặt đô thị/bê tông hóa.
-  * MNDWI (Chỉ số nước cải tiến): để nhận diện các vùng nước mặt.
-  * EVI (Chỉ số thực vật tăng cường): tăng khả năng phân biệt cấu trúc thực vật rậm rạp.
-  * SAVI (Chỉ số thực vật hiệu chỉnh đất): hiệu chỉnh độ sáng của nền đất trống.
-  * BSI (Chỉ số đất trống): nâng cao nhận diện công trường và đất canh tác khô.
-* **Chỉ số địa hình**: Độ cao (DSM) và Độ dốc (Slope).
+  * **NDVI** (Chỉ số thực vật): để nhận diện cây xanh.
+  * **NDBI** (Chỉ số đất xây dựng): để nhận diện bề mặt đô thị/bê tông hóa.
+  * **MNDWI** (Chỉ số nước cải tiến): để nhận diện các vùng nước mặt.
+  * **EVI** (Chỉ số thực vật tăng cường): tăng khả năng phân biệt cấu trúc thực vật rậm rạp.
+  * **SAVI** (Chỉ số thực vật hiệu chỉnh đất): hiệu chỉnh độ sáng của nền đất trống.
+  * **BSI** (Chỉ số đất trống): nâng cao nhận diện công trường và đất canh tác khô.
+* **Chỉ số địa hình**: Độ cao (`elevation`) và Độ dốc (`slope`).
 * **Đặc trưng Biến động Thời gian**: `NDVI_stdDev` (Độ lệch chuẩn thời gian của NDVI cả năm) giúp phân tách rõ rệt đất nông nghiệp có chu kỳ sinh trưởng khỏi đất trống đô thị/cát sông ổn định.
 * **Đặc trưng Kết cấu Không gian**: `B8_contrast` (Độ tương phản GLCM của kênh Cận hồng ngoại B8) giúp phân biệt bề mặt mịn của bãi cát sông Hồng với cấu trúc phức tạp, đứt gãy của các tòa nhà đô thị.
 

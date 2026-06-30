@@ -1,94 +1,100 @@
-# Quy trình Phân loại Lớp phủ LULC Hà Nội Cấp học thuật (2021 - 2024)
+# Academic-Grade LULC Classification Pipeline for Hanoi (2021 - 2024)
 
-Thư mục này chứa mã nguồn triển khai quy trình phân loại lớp phủ bề mặt (Land Use / Land Cover - LULC) cấp học thuật cho thành phố Hà Nội. Quy trình này chuyển đổi phương pháp từ lấy mẫu đa giác thủ công sang lấy mẫu phân tầng tự động dựa trên bộ dữ liệu **ESA WorldCover 2021**, tích hợp các đặc trưng địa hình (Độ cao, Độ dốc) từ dữ liệu **ALOS AW3D30 DEM**, và huấn luyện mô hình **Random Forest (200 cây)** trên **Google Earth Engine (GEE)** kết hợp với các bộ lọc hậu xử lý giảm nhiễu.
-
----
-
-## 1. Phương pháp Phân loại
-
-Quy trình phân loại bao gồm 5 giai đoạn chính:
-
-### Giai đoạn 1: Thu thập & Tiền xử lý dữ liệu
-* **Ảnh vệ tinh**: Ảnh độ phản xạ bề mặt Sentinel-2 (Level-2A) được tổng hợp (composite) cho mùa khô (từ 01/01 đến 15/02) của năm 2021 (năm cơ sở để lấy mẫu) và năm 2024 (năm mục tiêu phân loại).
-* **Lọc mây**: Áp dụng mặt nạ mây QA60 để loại bỏ mây dày và mây tích (cirrus).
-* **Nội suy lại (Resampling)**: Áp dụng phương pháp `.resample('bicubic')` trên từng ảnh đơn lẻ trong ImageCollection trước khi tính median composite nhằm giữ nguyên hệ tọa độ chiếu UTM bản địa và kích thước lưới, tránh lỗi tự động chuyển về độ phân giải thô 1 độ của GEE.
-* **Đặc trưng Địa hình**: Tích hợp dữ liệu độ cao và độ dốc từ **ALOS AW3D30 DEM** của JAXA ở độ phân giải 30m, được nội suy về 10m.
-
-### Giai đoạn 2: Lựa chọn Thuộc tính (Feature Engineering)
-Tổng cộng **16 thuộc tính dự báo** được đưa vào bộ phân loại:
-* **Các kênh phổ**: Xanh dung (`B2`), Xanh lá (`B3`), Đỏ (`B4`), Cận hồng ngoại (`B8`), SWIR-1 (`B11`), và SWIR-2 (`B12`).
-* **Các chỉ số phổ phụ trợ**:
-  * **NDVI** (Chỉ số thực vật): để nhận diện cây xanh.
-  * **NDBI** (Chỉ số đất xây dựng): để nhận diện bề mặt đô thị/bê tông hóa.
-  * **MNDWI** (Chỉ số nước cải tiến): để nhận diện các vùng nước mặt.
-  * **EVI** (Chỉ số thực vật tăng cường): tăng khả năng phân biệt cấu trúc thực vật rậm rạp.
-  * **SAVI** (Chỉ số thực vật hiệu chỉnh đất): hiệu chỉnh độ sáng của nền đất trống.
-  * **BSI** (Chỉ số đất trống): nâng cao nhận diện công trường và đất canh tác khô.
-* **Chỉ số địa hình**: Độ cao (`elevation`) và Độ dốc (`slope`).
-* **Đặc trưng Biến động Thời gian**: `NDVI_stdDev` (Độ lệch chuẩn thời gian của NDVI cả năm) giúp phân tách rõ rệt đất nông nghiệp có chu kỳ sinh trưởng khỏi đất trống đô thị/cát sông ổn định.
-* **Đặc trưng Kết cấu Không gian**: `B8_contrast` (Độ tương phản GLCM của kênh Cận hồng ngoại B8) giúp phân biệt bề mặt mịn của bãi cát sông Hồng với cấu trúc phức tạp, đứt gãy của các tòa nhà đô thị.
-
-### Giai đoạn 3: Lấy mẫu Phân tầng Tự động & Lọc sạch nhãn nhiễu
-* **Nhãn tham chiếu**: Bộ dữ liệu **ESA WorldCover 2021 (10m)** được phân loại lại từ 11 lớp toàn cầu thành 5 lớp địa phương:
-  * `0`: Nước (Open water - lớp 80)
-  * `1`: Đô thị (Built-up - lớp 50)
-  * `2`: Nông nghiệp (Cropland - lớp 40)
-  * `3`: Cây xanh (Trees, Shrubland, Grassland, Herbaceous wetland - các lớp 10, 20, 30, 90, 95)
-  * `4`: Đất trống (Barren / sparse vegetation - các lớp 60, 100)
-* **Lấy mẫu**: Thực thi hàm `.stratifiedSample()` trên ảnh tổng hợp Sentinel-2 năm 2021 của Hà Nội dựa trên bản đồ ESA đã phân loại lại:
-  * Tổng điểm mẫu phân tầng: **2500 điểm** (phân bổ tối đa: [2000, 1500, 1500, 1500, 2500])
-* **Lọc sạch nhãn nhiễu (Spectral Filtering)**: Để loại bỏ sai lệch nhãn do sai khác mùa (ví dụ: bãi cát khô ven sông Hồng mùa khô bị bản đồ tham chiếu ESA gán nhãn tĩnh là Nước), ta áp dụng các bộ lọc vật lý:
-  * Mẫu Nước phải có `MNDWI > -0.05`.
-  * Mẫu Cây xanh phải có `NDVI > 0.25`.
-  * Mẫu Đất trống phải có `MNDWI < 0` và `NDVI < 0.3`.
-* **Cập nhật phổ vùng nước**: Lấy thêm 50 pixel mẫu nước số hóa thủ công trên sông Hồng năm 2024.
-
-### Giai đoạn 4: Huấn luyện & Đánh giá mô hình
-* **Mô hình**: Bộ phân loại Random Forest cấu hình **200 cây quyết định** (`ee.Classifier.smileRandomForest(200)`).
-* **Chia tách dữ liệu**: 70% lượng mẫu sạch dùng để huấn luyện mô hình, 30% giữ làm tập kiểm thử (validation).
-
-### Giai đoạn 5: Hậu xử lý
-Để loại bỏ các sai số phân loại cục bộ và nhiễu không gian, hai bộ lọc đã được áp dụng:
-1. **Lọc trung vị không gian (Focal Mode)**: Áp dụng bộ lọc Focal Mode hình tròn bán kính 1 pixel (`.focalMode(1, 'circle')`) để làm mịn các pixel nhiễu đơn lẻ ("nhiễu muối tiêu").
-2. **Ép mặt nạ nước (Water Masking)**: Ép các vùng nước mặt vĩnh cửu từ lớp 80 của ESA WorldCover vào bản đồ phân loại LULC cuối cùng bằng hàm `.where()` để đảm bảo hình dáng dòng sông Hồng chính xác 100%.
+This repository contains the source code implementing an academic-grade Land Use / Land Cover (LULC) classification pipeline for Hanoi. The methodology transitions from manual polygon digitizing to automated stratified sampling based on the **ESA WorldCover 2021** dataset, integrates topographic features (Elevation, Slope) from the **ALOS AW3D30 DEM**, and trains a **Random Forest (200 trees)** classifier on **Google Earth Engine (GEE)** combined with post-processing noise reduction filters.
 
 ---
 
-## 2. Kết quả Đánh giá Độ chính xác (Chia tách 70/30)
+## 1. Classification Methodology
 
-Sau khi tích hợp 3 chỉ số phổ EVI, SAVI, BSI và lọc sạch nhãn nhiễu khỏi dữ liệu mẫu:
+The classification pipeline consists of 5 main stages:
 
-* **Độ chính xác toàn cục (Overall Accuracy - OA)**: **83.48%**
-* **Hệ số Kappa (Kappa Coefficient)**: **0.7930**
+### Stage 1: Data Acquisition & Pre-processing
+* **Satellite Imagery**: Sentinel-2 Surface Reflectance (Level-2A) image composites are generated for the dry season (January 1st to February 15th) for 2021 (baseline year for sampling) and 2024 (target year for classification).
+* **Cloud Masking**: A QA60 cloud mask is applied to remove thick clouds and cirrus.
+* **Resampling**: To prevent GEE from automatically downsampling the imagery to a coarse 1-degree resolution during median compositing, `.resample('bicubic')` is applied directly to each individual image within the ImageCollection to preserve the native UTM projection and 10m grid.
+* **Topographic Features**: Elevation and slope data from JAXA's **ALOS AW3D30 DEM** (originally 30m resolution) are integrated and resampled to 10m.
 
-### Ma trận nhầm lẫn (Confusion Matrix)
+### Stage 2: Feature Selection & Engineering
+A total of **16 predictor features** are input into the classifier:
+* **Spectral Bands**: Blue (`B2`), Green (`B3`), Red (`B4`), Near-Infrared (`B8`), SWIR-1 (`B11`), and SWIR-2 (`B12`).
+* **Spectral Indices**:
+  * **NDVI** (Normalized Difference Vegetation Index): For identifying greenery/vegetation.
+  * **NDBI** (Normalized Difference Build-up Index): For identifying urban/built-up surfaces.
+  * **MNDWI** (Modified Normalized Difference Water Index): For identifying surface water bodies.
+  * **EVI** (Enhanced Vegetation Index): To improve differentiation of dense vegetation structures.
+  * **SAVI** (Soil Adjusted Vegetation Index): Adjusts for soil background brightness in sparse areas.
+  * **BSI** (Bare Soil Index): Enhances identification of construction sites and dry agricultural land.
+* **Topographic Indices**: Elevation (`elevation`) and Slope (`slope`).
+* **Temporal Variation Feature**: `NDVI_stdDev` (the standard deviation of NDVI over the entire year) helps distinguish seasonal cropland from stable urban areas or river sandbars.
+* **Spatial Texture Feature**: `B8_contrast` (GLCM contrast of the NIR B8 band) helps differentiate smooth riverbed sandbars from the complex, high-contrast textures of urban structures.
+
+### Stage 3: Automated Stratified Sampling & Noise Filtering
+* **Reference Labels**: The **ESA WorldCover 2021 (10m)** dataset is reclassified from 11 global classes to 5 local target classes:
+  * `0`: Water (Open water - ESA class 80)
+  * `1`: Urban (Built-up - ESA class 50)
+  * `2`: Agriculture (Cropland - ESA class 40)
+  * `3`: Greenery (Trees, Shrubland, Grassland, Herbaceous wetland - ESA classes 10, 20, 30, 90, 95)
+  * `4`: Bare Land (Barren / sparse vegetation - ESA classes 60, 100)
+* **Sampling**: The `.stratifiedSample()` function is executed on the 2021 Sentinel-2 composite over Hanoi using the reclassified ESA map:
+  * Total stratified sample points: **2,500 points** (maximum allocation: [2000, 1500, 1500, 1500, 2500])
+* **Spectral Filtering**: To eliminate reference label noise caused by seasonal mismatches (e.g., dry river sandbars mislabeled as Water by the static ESA WorldCover map), physical index filters are applied:
+  * Water samples must satisfy `MNDWI > -0.05`.
+  * Greenery samples must satisfy `NDVI > 0.25`.
+  * Bare Land samples must satisfy `MNDWI < 0` and `NDVI < 0.3`.
+* **Water Sample Enrichment**: An additional 50 manually digitized water pixels on the Red River from 2024 are merged to capture turbid water spectral profiles.
+* **Train/Test Split**: 70% of clean samples are used for training, and 30% are reserved for independent testing.
+
+### Stage 4: Model Training & Validation
+* **Model**: A Random Forest classifier configured with **200 decision trees** (`ee.Classifier.smileRandomForest(200)`).
+* **Validation**: Evaluated using the independent 30% test split.
+
+### Stage 5: Post-processing
+To eliminate salt-and-pepper noise and spatial classification errors, two filters are applied:
+1. **Spatial Mode Filter (Focal Mode)**: A circular focal mode filter with a 1-pixel radius (`.focalMode(1, 'circle')`) is applied to smooth out isolated misclassified pixels.
+2. **Water Masking**: Permanent water bodies from ESA WorldCover (class 80) are forced into the final LULC map using `.where()` to guarantee the high-fidelity representation of the main flow of the Red River.
+
+---
+
+## 2. Accuracy Assessment Results (70/30 Split)
+
+After integrating spectral indices (EVI, SAVI, BSI) and spectral filtering:
+* **Overall Accuracy (OA)**: **83.48%**
+* **Kappa Coefficient**: **0.7930**
+
+### Confusion Matrix
 ```text
-Thực tế \ Dự báo | Nước (0) | Đô thị (1) | Nông nghiệp (2) | Cây xanh (3) | Đất trống (4)
-Nước (0)        |   533    |     0      |      18        |      0       |      5
-Đô thị (1)      |     2    |   353      |      18        |     34       |     61
-Nông nghiệp (2)  |    16    |    16      |     344        |     54       |     11
-Cây xanh (3)    |     1    |    32      |      57        |    347       |      2
-Đất trống (4)   |     1    |    41      |      17        |      0       |    383
+Actual \ Predicted | Water (0) | Urban (1) | Agriculture (2) | Greenery (3) | Bare Land (4)
+Water (0)          |    533    |     0     |       18        |      0       |      5
+Urban (1)          |      2    |   353     |       18        |     34       |     61
+Agriculture (2)    |     16    |    16     |      344        |     54       |     11
+Greenery (3)       |      1    |    32     |       57        |    347       |      2
+Bare Land (4)      |      1    |    41     |       17        |      0       |    383
 ```
 
 ---
 
-## 3. Các sản phẩm đầu ra trong thư mục
-* 📄 **[classify_hanoi.py](classify_hanoi.py)**: Tập lệnh Python chạy quy trình phân loại từ đầu đến cuối và xuất báo cáo tự động.
-* 📄 **[classify_hanoi.ipynb](classify_hanoi.ipynb)**: Jupyter Notebook chi tiết, lưu vết đầy đủ đầu ra thực thi của mô hình.
-* 📄 **[hanoi_lulc_district_areas.csv](hanoi_lulc_district_areas.csv)**: Bảng thống kê diện tích ($km^2$) các lớp phủ LULC cho 29 quận/huyện của Hà Nội được tính ở độ phân giải 10m.
-* 📄 **[hanoi_lulc_interactive.html](hanoi_lulc_interactive.html)**: Bản đồ tương tác Folium chứa ranh giới quận huyện, chú thích 5 lớp phủ, và tooltip thông minh hiển thị tỷ lệ đô thị hóa khi di chuột.
+## 3. Directory Deliverables
+* 📄 **[classify_hanoi.py](classify_hanoi.py)**: Python script executing the classification pipeline from start to finish and exporting results.
+* 📄 **[classify_hanoi.ipynb](classify_hanoi.ipynb)**: Detailed Jupyter Notebook preserving the execution outputs and visualizations.
+* 📄 **[hanoi_lulc_district_areas.csv](hanoi_lulc_district_areas.csv)**: Detailed area statistics ($km^2$) for the 5 LULC classes calculated at 10m scale for the 29 districts of Hanoi.
+* 📄 **[hanoi_lulc_interactive.html](hanoi_lulc_interactive.html)**: Interactive Folium map displaying district boundaries, a 5-class LULC overlay, custom legend, and tooltips showing urbanization rate on hover.
 
 ---
 
-## 4. Hướng dẫn chạy chương trình
+## 4. GEE Map Tile Expiration (Important Note)
 
-Đảm bảo môi trường conda `hanoi_gis` đã được kích hoạt:
+> [!WARNING]
+> The LULC classification overlay on the interactive map (`hanoi_lulc_interactive.html`) is loaded dynamically from Google Earth Engine using a temporary Map ID. **These GEE Map IDs automatically expire after 36 to 72 hours.**
+> 
+> If the LULC overlay does not appear when opening the HTML file, the Map ID has expired. You can regenerate the files with fresh, active Map IDs by running the pipeline again.
+
+---
+
+## 5. How to Run
+
+Ensure that the environment containing Python and dependencies (`ee`, `geemap`, `folium`, `geopandas`, `pandas`, `rasterio`) is set up:
 
 ```bash
-# Cách 1: Chạy trực tiếp kịch bản Python để xuất file
-python LULC_Hanoi_2021_2024/classify_hanoi.py
-
-# Cách 2: Mở Jupyter Notebook để xem phân tích trực quan
-jupyter notebook LULC_Hanoi_2021_2024/classify_hanoi.ipynb
+# Run the Python script to regenerate map and CSV area statistics
+python classify_hanoi.py
 ```

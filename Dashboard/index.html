@@ -814,6 +814,7 @@
                 <p style="font-size: 11px; color: var(--text-muted);">Land Cover, Environmental Quality, & Urban Pressure Metrics (2024)</p>
             </div>
             <span class="header-tag">Interactive</span>
+            <span id="last-updated-time" class="header-tag" style="background:rgba(16,185,129,0.15); border-color:var(--success); color:#34d399; margin-left:8px; display:none;">Live: --</span>
         </div>
         <div class="header-actions">
             <a href="data/hanoi_lulc_district_areas.csv" class="btn" download><i class="fa-solid fa-file-csv"></i> Export CSV Data</a>
@@ -2075,10 +2076,47 @@
             evt.currentTarget.classList.add('active');
         }
 
+        // Asynchronous Real-Time Data Sync
+        async function initDashboard() {
+            try {
+                const response = await fetch('data/realtime_metrics.json');
+                if (!response.ok) throw new Error("Failed to load realtime_metrics.json");
+                const realtime = await response.json();
+                
+                // Update metropolitan averages
+                metroTotals.aqi = realtime.metro.aqi;
+                metroTotals.lst = realtime.metro.lst;
+                
+                const headerTime = document.getElementById('last-updated-time');
+                if (headerTime) {
+                    const localTime = new Date(realtime.last_updated).toLocaleString();
+                    headerTime.innerText = `Live: ${localTime}`;
+                    headerTime.style.display = 'inline-block';
+                }
+
+                // Update district records
+                lulcData.forEach(d => {
+                    const dynamicRecord = realtime.districts[d.District_Name];
+                    if (dynamicRecord) {
+                        d.aqi = dynamicRecord.aqi;
+                        d.lst = dynamicRecord.lst;
+                        d.flood_points = dynamicRecord.flood_points;
+                    }
+                });
+                
+                console.log("Realtime data successfully loaded and synchronized.");
+            } catch (err) {
+                console.warn("Real-time data sync offline/failed. Using baseline statistical profile.", err);
+            } finally {
+                // Run standard rendering in sequence
+                switchTheme('lulc');
+                initMainCharts();
+                renderTable();
+            }
+        }
+
         // Run Initialization
-        switchTheme('lulc');
-        initMainCharts();
-        renderTable();
+        initDashboard();
 
     </script>
 </body>

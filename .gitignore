@@ -22,3 +22,8 @@ __pycache__/
 # Exceptions: Explicitly allow media in these specific folders
 !/Day 1/media/**
 !/Day 1/QGISmedia/**
+
+# Ignore local environment variable files
+.env
+.env.*
+Dashboard/.env
